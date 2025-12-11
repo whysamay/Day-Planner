@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Annotated
 
@@ -8,12 +8,33 @@ from .. import models, schemas
 from ..database import get_db
 from ..security import hash_password, verify_password, create_access_token 
 
-db_dependency = Annotated[Session, Depends(get_db)]
-form_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
-
 router = APIRouter(
     tags=['Authentication']
 )
+
+
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
+
+db_dependency = Annotated[Session, Depends(get_db)]
+form_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
+token_dependency = Annotated[str, Depends(oauth2_bearer)]
+
+def get_current_user(token: token_dependency, db: db_dependency) -> models.User:
+    """Authenticates the user using the JWT token and fetches the User model."""
+    
+    try:
+        user_id = verify_token(token, CREDENTIALS_EXCEPTION)
+    except JWTError:
+        raise CREDENTIALS_EXCEPTION
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    
+    if user is None:
+        raise CREDENTIALS_EXCEPTION
+    
+    return user
+
+current_user_dependency = Annotated[models.User, Depends(get_current_user)]
 
 @router.post('/register', response_model=schemas.UserOut, status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, Create_User_Request: schemas.UserCreate):

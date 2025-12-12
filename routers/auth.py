@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 
 # --- Internal Imports (Using relative paths for stability) ---
-from .. import models, schemas
-from ..database import get_db
-from ..security import hash_password, verify_password, create_access_token 
+import models, schemas
+from database import get_db
+from security import hash_password, verify_password, create_access_token 
 
 router = APIRouter(
     tags=['Authentication']
@@ -37,10 +37,10 @@ def get_current_user(token: token_dependency, db: db_dependency) -> models.User:
 current_user_dependency = Annotated[models.User, Depends(get_current_user)]
 
 @router.post('/register', response_model=schemas.UserOut, status_code=status.HTTP_201_CREATED)
-async def create_user(db: db_dependency, Create_User_Request: schemas.UserCreate):
+async def register_user(db: db_dependency, Create_User_Request: schemas.UserCreate):
 
-    existing_user = db.query(models.Users).filter(
-        models.Users.email == Create_User_Request.email
+    existing_user = db.query(models.User).filter(
+        models.User.email == Create_User_Request.email
     ).first()
 
     if existing_user:
@@ -51,11 +51,11 @@ async def create_user(db: db_dependency, Create_User_Request: schemas.UserCreate
         )
     hashed_pass = hash_password(Create_User_Request.password)
 
-    Create_user_base = models.Users(
+    Create_user_base = models.User(
         email=Create_User_Request.email,
         phone_number=Create_User_Request.phone_number,
         role=Create_User_Request.role,
-        password=hashed_pass
+        hashed_password=hashed_pass
     )
     
     db.add(Create_user_base)
@@ -69,11 +69,11 @@ async def login_for_access_token(
     form_data: form_dependency, 
     db: db_dependency
 ):
-    user = db.query(models.Users).filter(
-        models.Users.email == form_data.username
+    user = db.query(models.User).filter(
+        models.User.email == form_data.username
     ).first()
     
-    if not user or not verify_password(form_data.password, user.password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         # Raise generic 401 for security
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,7 +81,7 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
      
-    token_payload = {"sub": str(user.unique_id)} 
+    token_payload = {"user_id": str(user.id)} 
     
     # Generate the access token using the function from security.py
     access_token = create_access_token(token_payload)

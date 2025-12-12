@@ -10,7 +10,8 @@ class UserCreate(UserBase):
     password: str
 
 class UserOut(UserBase):
-    unique_id: int
+    id: int
+    is_active: bool = True 
 
     class Config:
         from_attributes = True
@@ -19,13 +20,19 @@ class TodoBase(BaseModel):
     title: str
     description: str
     priority: int
-    complete: bool
 
 class TodoCreate(TodoBase):
     pass
 
+class TodoUpdate(BaseModel):
+    # CRITICAL FIX: Schema for updating a task. All fields are Optional.
+    title: Optional[str] = None
+    description: Optional[str] = None
+    priority: Optional[int] = None
+    complete: Optional[bool] = None 
+
 class TodoOut(TodoBase):
-    unique_id: int
+    id: int
     owner_id: int
 
     class Config:

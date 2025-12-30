@@ -2,16 +2,24 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Annotated
+from jose import JWTError
 
 # --- Internal Imports (Using relative paths for stability) ---
 import models, schemas
 from database import get_db
-from security import hash_password, verify_password, create_access_token 
+from security import hash_password, verify_password, create_access_token, verify_token
 
 router = APIRouter(
     tags=['Authentication']
 )
 
+CREDENTIALS_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+#Since you have both a dependencies.py and a routers/auth.py trying to do 
+##similar things, there might be a conflict or a missing line in the file your app is actually using.
 
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 

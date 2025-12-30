@@ -9,6 +9,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+
+class UserPasswordUpdate(BaseModel):
+    old_password: str
+    new_password: str
+
 class UserOut(UserBase):
     id: int
     is_active: bool = True 

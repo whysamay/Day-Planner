@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from .test_auth import Test_user_1 
+from test_auth import Test_user_1
+from security import verify_password
+import models
 
 
 def get_token_for_user(client: TestClient, user_data: dict):
@@ -81,7 +83,7 @@ def test_list_all_users_allowed_for_admin(client: TestClient):
 
 # --- 5. TEST: DELETE /users/me (Delete Account) ---
 def test_delete_own_account(client: TestClient):
-    token = get_token_for_user(client, TEST_USER)
+    token = get_token_for_user(client, Test_user_1)
     headers = {"Authorization": f"Bearer {token}"}
     
     # 1. Delete
@@ -89,5 +91,5 @@ def test_delete_own_account(client: TestClient):
     assert response.status_code == 204
     
     # 2. Verify account is gone (Login fails)
-    login_data = {"username": TEST_USER["email"], "password": Test_user_1["password"]}
+    login_data = {"username": Test_user_1["email"], "password": Test_user_1["password"]}
     assert client.post("/auth/token", data=login_data).status_code == 401

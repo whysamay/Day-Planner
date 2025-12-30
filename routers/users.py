@@ -4,6 +4,10 @@ from routers.auth import get_current_user, db_dependency
 from fastapi import APIRouter, Depends, HTTPException, status
 from database import get_db
 from security import hash_password
+import schemas
+from typing import List
+from security import verify_password
+import models
 
 #db_dependency = Annotated[Session, Depends(get_db)]
 current_user_dependency = Annotated[dict, Depends(get_current_user)]

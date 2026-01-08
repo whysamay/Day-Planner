@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, HTTPException, Path
 from typing import Annotated, List, Optional
 
 import schemas
@@ -68,9 +68,9 @@ async def read_all_todos(
 
 @router.get("/{todo_id}", response_model=schemas.TodoOut)
 async def read_todo_by_id(
-    todo_id: int,
     user: current_user_dependency,
-    db: db_dependency
+    db: db_dependency,
+    todo_id: int = Path(gt=0)
 ):
     """Retrieves a specific To-Do item if it belongs to the authenticated user."""
     

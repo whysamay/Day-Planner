@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 
+# --- 1. User Schemas ---
+
 class UserBase(BaseModel):
     email: EmailStr
     phone_number: str
@@ -24,16 +26,17 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
+# --- 2. Todo Schemas ---
+
 class TodoBase(BaseModel):
     title: str
-    description: str
+    description: Optional[str] = None # Fixed: Made optional to prevent 422 errors
     priority: int
 
 class TodoCreate(TodoBase):
     pass
 
 class TodoUpdate(BaseModel):
-    # CRITICAL FIX: Schema for updating a task. All fields are Optional.
     title: Optional[str] = None
     description: Optional[str] = None
     priority: Optional[int] = None
@@ -42,11 +45,13 @@ class TodoUpdate(BaseModel):
 class TodoOut(TodoBase):
     id: int
     owner_id: int
+    complete: bool # Fixed: Added this field so Pydantic can return the completion status
 
     class Config:
         from_attributes = True
 
+# --- 3. Authentication Schemas ---
+
 class Token(BaseModel):
-    # This schema is the response model for the login endpoint (/token)
     access_token: str
     token_type: str = "bearer"
